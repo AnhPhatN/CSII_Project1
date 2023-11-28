@@ -65,7 +65,7 @@ class Candidate:
 
 
 class PresidentialCandidate(Candidate):
-    def __init__(self, first_name, last_name, pol_party):
+    def __init__(self, first_name: str, last_name: str, pol_party: str):
         super().__init__(first_name, last_name)
         self.__candidate_pol_party = pol_party
 

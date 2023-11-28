@@ -1,13 +1,12 @@
 #Project 1
-from accounts import *
-
+from candidates import *
+from logic import *
 
 
 """
-TODO: make GUI using PYQT
+test
 
-Need to separate code into files:
-main.py, accounts.py, gui.py, logic.py, and any other we might need
+python -m PyQt6.uic.pyuic -o gui.py -x Project1GUI.ui
 
 
 
@@ -17,7 +16,12 @@ main.py, accounts.py, gui.py, logic.py, and any other we might need
     
 
 def main():
-  pass
+    application = QApplication([])
+    window = Logic()
+    window.show()
+    application.exec()
+
+    
 
 
 

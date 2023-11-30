@@ -2,82 +2,232 @@
 
 from PyQt6.QtWidgets import *
 from gui import *
+import csv
 
 class Logic(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.setWindowTitle('Voting Menu')
+
+        #hiding frames to be displayed
+        self.voting_frame.hide()
+        self.total_votes_frame.hide()
+
+        #From the home frame, 
+        # #vote_for_button takes you to voting frame
+        # #total_votes_button takes you to total votes frame
+        self.vote_for_button.clicked.connect(lambda : self.display_voting_frame())
+        self.total_votes_button.clicked.connect(lambda : self.display_total_votes_frame())
+
+        #getting back to home button from voting frame or total votes frame
+        self.push_button_home.clicked.connect(lambda : self.display_home_frame())
+        self.push_button_home2.clicked.connect(lambda : self.display_home_frame())
+
+        #submitting a vote on the voting frame
+        self.push_button_submit.clicked.connect(lambda : self.voter_submit_button())
 
 
-
-
-
-    '''
-    Below is from our Test 10 gui logic, it's only here for notes, delete if don't need
+        #creating a new CSV (this will delete the previous save!!)
+        #will only remember votes per session
+        self.create_csv()
     
-    '''
-        #example of how to make button below \/
-        # self.pushButton_submit.clicked.connect(lambda : self.submit())
-        # self.pushButton_clear.clicked.connect(lambda : self.clear())
+    def display_total_votes_frame(self) -> None:
+        '''
+        displays total votes frame, hides home frame
+        
+        :return: None
+        '''
+        self.total_votes_frame.show()
+        self.home_frame.hide()
+        self.total_vote_label.setText(self.count_total_votes())
+
+    def display_voting_frame(self) -> None:
+        '''
+        displays voting frame, hides home frame
+        
+        :return: None
+        '''
+        self.home_frame.hide()
+        self.voting_frame.show()
+
+    def display_home_frame(self) -> None:
+        '''
+        displays home frame, hides others frames
+
+        :return: None
+        '''
+        self.clear_voter_choices()
+        self.home_frame.show()
+        self.voting_frame.hide()
+        self.total_votes_frame.hide()
 
 
-    #some method examples below \/
-    # def submit(self):
-    #     try:
-    #         food = float(self.input_food.text().strip())
-    #         drink = float(self.input_drink.text().strip())
-    #         dessert = float(self.input_dessert.text().strip())
-
-    #         tax = .10
-    #         tip = .10 #default option
-
-    #         if self.radioButton_tip_10.isChecked():
-    #             tip = .10
-    #         elif self.radioButton_tip_15.isChecked():
-    #             tip = .15
-    #         elif self.radioButton_tip_20.isChecked():
-    #             tip = .20
 
 
-    #         meal_total = food + drink + dessert
-    #         tax_amount = meal_total * tax
-    #         tip_amount = (meal_total + tax_amount) * tip
+    def get_radio_input(self) -> str:
+        '''
+        function gets input from radio button, if none is selected then returns "Nothing selected"
+        possible choice for radio buttons: 'Kanye', 'Drake', 'Nothing selected'
 
-    #         bill_total = meal_total + tax_amount + tip_amount
+        :return: candidate_choice
+        '''
+        candidate_choice = "Nothing selected"
+        if self.candidate1_radio.isChecked():
+            candidate_choice = 'Kanye'
+            # print(candidate_choice)
+        elif self.candidate2_radio.isChecked():
+            candidate_choice = 'Drake'
+            # print(candidate_choice)
+        return candidate_choice
+
+
+    def get_user_input(self) -> str:
+        '''
+        takes string from line_edit_NUID and returns it
+
+
+        :return: student_ID: str
+        '''
+        student_ID = self.line_edit_NUID.text()
+        return student_ID
+
+
+    def clear_voter_choices(self) -> None:
+        '''
+        clears all voting options, clears NUID textbox, clears radio buttons, clears invalid messages
+        
+        :return: None
+        '''
+        #clearing NUID text box
+        self.line_edit_NUID.clear()
+        #clearing Invalid messages
+        self.validNUID_label.clear()
+        #clearing radio buttons
+        for radioButton in [self.candidate1_radio, self.candidate2_radio]:
+            radioButton.setAutoExclusive(False)
+            radioButton.setChecked(False)
+            radioButton.setAutoExclusive(True)
+
+
+    def create_csv(self) -> None:
+        '''
+        Creates a CSV with the header: NUID, Candidate
+
+        a new CSV is created every time program is run, deleting the previous votes
+        :return: None
+        '''
+        with open('output.csv', 'w', newline='') as csv_output_file:
+            csv_output_writer = csv.writer(csv_output_file)
+            csv_output_writer.writerow(["NUID", "Candidate_Choice"])
+
+
+
+    def NUID_isvalid(self, user_NUID: str) -> bool:
+        '''
+        makes sure NUID is valid: 8 numbers, and not been used in output.csv
+        
+        :return: True if NUID is valid, False if NUID is NOT valid
+        '''
+        user_NUID = user_NUID.strip()
+        print(user_NUID)
+        if user_NUID == '':
+            self.validNUID_label.setText('Please enter a NUID')
+
+        if len(user_NUID) != 8:
+            self.validNUID_label.setText('NUID needs to be 8 characters long')
+            return False
+        
+        if not user_NUID.isnumeric():
+            self.validNUID_label.setText('NUID needs to be 8 numbers')
+            return False
+        
+        #checking if NUID has been used
+        with open('output.csv', 'r') as csv_file:
+
+            for line in csv_file:
+                line = line.strip()
+                line = line.split(',')
+                if line[0] == user_NUID:
+                    # print("NUID ALREADY USED")
+                    self.validNUID_label.setText('NUID has already been used')
+                    return False
+
+
+        return True
 
 
 
 
 
-    #         # print(f'food: {food}, drink: {drink}, dessert: {dessert}, tax_amount: {tax_amount}, tip_amount: {tip_amount}, bill_total: {bill_total}')
+    def append_csv(self, user_NUID: str, candidate_choice: str) -> None:
+        '''
+        takes params and outputs to csv file, in the form ['user_NUID', 'candidate_choice']
+
+        :param user_NUID: a valid UNID as a str
+        :param candidate_choice: a valid radio choice, either 'Kanye' or 'Drake'
+        :return: None
+        '''
+        with open('output.csv', 'a') as csv_output_file:
+            writer = csv.writer(csv_output_file)
+            writer.writerow([user_NUID, candidate_choice])
+
+
+    def voter_submit_button(self) -> bool:
+        '''
+        gets user NUID and candidate radio option,
+        checks if NUID is valid with .NUID_isvalid method,
+        checks if radio option is NOT 'Nothing selected'
+        
+        if all checks are good, then append to CSV
+
+        :return: True if submit was successful, and False if submit was unsuccessful
+        '''
+        user_NUID = self.get_user_input()
+        user_candidate_choice = self.get_radio_input()
+
+        self.clear_voter_choices()
+
+
+        if self.NUID_isvalid(user_NUID) == False:
+            return False
+
+
+        if user_candidate_choice == "Nothing selected":
+            self.validNUID_label.setText('Please select a candidate')
+            return False
+        
+
+        #set label
+        self.validNUID_label.setText('Vote has been submitted!')
+        self.append_csv(user_NUID, user_candidate_choice)
+        return True
+
+
+
+    def count_total_votes(self) -> str:
+        '''
+        counts all votes for each candidate 
+        
+        :return: f string which states total votes for each candidate
+        '''
+        with open('output.csv', 'r') as csv_file:
+            votes_for_kanye = 0
+            votes_for_drake = 0
             
-    #         self.textBrowser_bill.setText(f"{'SUMMARY' :^40}\n"
-    #                                         f"{'Food:' :<40} ${food:.2f}\n"
-    #                                         f"{'Drink:' :<40} ${drink:.2f}\n"
-    #                                         f"{'Dessert:' :<40} ${dessert:.2f}\n"
-    #                                         f"{'Tax:' :<40} ${tax_amount:.2f}\n" 
-    #                                         f"{'Tip:' :<40} ${tip_amount:.2f}\n\n"
-    #                                         f"{'TOTAL:' :<40} ${bill_total:.2f}")
-    #         #for some reason it's not doing string alignment with pyqt text box
-
-    #         # print(f"{'SUMMARY' :^40}\n"
-    #         #                                 f"{'Food:' :<40} ${food:.2f}\n"
-    #         #                                 f"{'Drink:' :<40} ${drink:.2f}\n"
-    #         #                                 f"{'Dessert:' :<40} ${dessert:.2f}\n"
-    #         #                                 f"{'Tax:' :<40} ${tax_amount:.2f}\n" 
-    #         #                                 f"{'Tip:' :<40} ${tip_amount:.2f}\n\n"
-    #         #                                 f"{'TOTAL:' :<40} ${bill_total:.2f}")
-
-    #     except:
-    #         self.textBrowser_bill.setText(f"{'Food, drink, and dessert' :^40}\n"
-    #                                       f"{'need to be numeric' :^40}\n"
-    #                                       f"{'e.g. 10.25 not $10.25' :^40}\n")
-
-
-
-    # def clear(self):
-    #     self.input_food.clear()
-    #     self.input_drink.clear()
-    #     self.input_dessert.clear()
-    #     self.textBrowser_bill.clear()
-    #     self.radioButton_tip_10.setChecked(True)
+            header_line = True
+            for line in csv_file:
+                if header_line == True:
+                    header_line = False
+                    continue
+                
+                line = line.strip()
+                line = line.split(',')
+                
+                if line[1] == 'Kanye':
+                    votes_for_kanye += 1
+                
+                if line[1] == 'Drake':
+                    votes_for_drake += 1
+            
+            return f'Votes for Kanye {votes_for_kanye}\nVotes for Drake: {votes_for_drake}'

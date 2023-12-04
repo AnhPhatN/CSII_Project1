@@ -1,6 +1,4 @@
-from candidates import *
 from logic import *
-
 
 """
 Project 1, voting menu
@@ -15,9 +13,6 @@ def main():
     application.exec()
 
 
-
-
-  
 if __name__ == '__main__':
     main()
     

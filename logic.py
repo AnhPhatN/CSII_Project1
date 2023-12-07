@@ -130,7 +130,7 @@ class Logic(QMainWindow, Ui_MainWindow):
         :return: True if NUID is valid, False if NUID is NOT valid
         '''
         user_NUID = user_NUID.strip()
-        print(user_NUID)
+        #print(user_NUID)
         if user_NUID == '':
             self.validNUID_label.setText('Please enter a NUID')
 
